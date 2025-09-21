@@ -1,3 +1,8 @@
+import nltk
+import os
+
+nltk_data_dir = os.path.join(os.path.dirname(__file__), "nltk_data")
+nltk.data.path.append(nltk_data_dir)
 import streamlit as st
 import pickle
 import nltk
@@ -7,8 +12,8 @@ from nltk.stem.porter import PorterStemmer
 import string
 from collections import Counter
 
-nltk.download('punkt')
-nltk.download('stopwords')
+# nltk.download('punkt')
+# nltk.download('stopwords')
 
 stopWords = set(stopwords.words('english'))
 punctuation = set(string.punctuation)
