@@ -1,54 +1,3 @@
-# import streamlit as st
-# import pickle 
-# import nltk
-# tfv = pickle.load(open('tfv.pkl','rb'))
-# model = pickle.load(open('model.pkl','rb'))
-
-# st.title("Email Spam Detector")
-
-
-
-
-
-# def tranformText(text):
-#     import string
-#     from nltk.stem.porter import PorterStemmer
-#     punctuation = string.punctuation
-#     from nltk.corpus import stopwords
-#     nltk.download('stopwords')
-#     stopWords = stopwords.words('english')
-#     ps = PorterStemmer()
-#     text = text.lower()
-#     text = nltk.word_tokenize(text)
-#     tmp = []
-#     for i in text:
-#         if i.isalnum() and i not in stopWords and i not in punctuation:
-#             i = ps.stem(i)
-#             tmp.append(i)
-#     return " ".join(tmp)
-
-
-
-# input = st.text_input("Enter the Email to check ")
-# newTxt = tranformText(input)
-
-# if st.button('Predict'):
-
-#     transTxt = tfv.transform([newTxt])
-
-#     ans = model.predict(transTxt)[0]
-
-#     if ans==1:
-#         st.header("Spam")
-#     else:
-#         st.header("Not Spam")
-
-
-
-
-
-
-
 import streamlit as st
 import pickle
 import nltk
@@ -56,6 +5,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem.porter import PorterStemmer
 import string
+from collections import Counter
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -65,7 +15,12 @@ punctuation = set(string.punctuation)
 ps = PorterStemmer()
 
 tfv = pickle.load(open('tfv.pkl','rb'))
-model = pickle.load(open('model.pkl','rb'))
+gnb = pickle.load(open('gnb.pkl','rb'))
+mnb = pickle.load(open('mnb.pkl','rb'))
+bnb = pickle.load(open('bnb.pkl','rb'))
+tfvgnb = pickle.load(open('tfvgnb.pkl','rb'))
+tfvmnb = pickle.load(open('tfvmnb.pkl','rb'))
+tfvbnb = pickle.load(open('tfvbnb.pkl','rb'))
 
 def transformText(text):
     text = text.lower()
@@ -88,9 +43,20 @@ if st.button("Predict"):
     else:
         cleaned_text = transformText(email_input)
         vectorized_text = tfv.transform([cleaned_text])
-        prediction = model.predict(vectorized_text)[0]
+        vectorized_text_dense = vectorized_text.toarray()
 
-        if prediction == 1:
+        predictions = [
+            gnb.predict(vectorized_text_dense)[0],
+            mnb.predict(vectorized_text_dense)[0],
+            bnb.predict(vectorized_text_dense)[0],
+            tfvgnb.predict(vectorized_text_dense)[0],
+            tfvmnb.predict(vectorized_text_dense)[0],
+            tfvbnb.predict(vectorized_text_dense)[0]
+        ]
+
+        final_prediction = Counter(predictions).most_common(1)[0][0]
+
+        if final_prediction == 1:
             st.markdown("<h2 style='color:red;'>Spam ⚠️</h2>", unsafe_allow_html=True)
         else:
             st.markdown("<h2 style='color:green;'>Not Spam ✅</h2>", unsafe_allow_html=True)
