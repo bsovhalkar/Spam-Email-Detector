@@ -1,31 +1,29 @@
-import nltk
 import os
-
-nltk_data_dir = os.path.join(os.path.dirname(__file__), "nltk_data")
-nltk.data.path.append(nltk_data_dir)
+import nltk
 import streamlit as st
 import pickle
-import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem.porter import PorterStemmer
 import string
 from collections import Counter
 
-# nltk.download('punkt')
-# nltk.download('stopwords')
+# Use local nltk_data folder
+nltk_data_dir = os.path.join(os.path.dirname(__file__), "nltk_data")
+nltk.data.path.append(nltk_data_dir)
 
 stopWords = set(stopwords.words('english'))
 punctuation = set(string.punctuation)
 ps = PorterStemmer()
 
-tfv = pickle.load(open('tfv.pkl','rb'))
-gnb = pickle.load(open('gnb.pkl','rb'))
-mnb = pickle.load(open('mnb.pkl','rb'))
-bnb = pickle.load(open('bnb.pkl','rb'))
-tfvgnb = pickle.load(open('tfvgnb.pkl','rb'))
-tfvmnb = pickle.load(open('tfvmnb.pkl','rb'))
-tfvbnb = pickle.load(open('tfvbnb.pkl','rb'))
+# Load models
+tfv = pickle.load(open('tfv.pkl', 'rb'))
+gnb = pickle.load(open('gnb.pkl', 'rb'))
+mnb = pickle.load(open('mnb.pkl', 'rb'))
+bnb = pickle.load(open('bnb.pkl', 'rb'))
+tfvgnb = pickle.load(open('tfvgnb.pkl', 'rb'))
+tfvmnb = pickle.load(open('tfvmnb.pkl', 'rb'))
+tfvbnb = pickle.load(open('tfvbnb.pkl', 'rb'))
 
 def transformText(text):
     text = text.lower()
@@ -43,20 +41,22 @@ st.markdown("Enter the text of an email below to check whether it is **Spam** or
 email_input = st.text_area("Enter Email:", height=150)
 
 if st.button("Predict"):
-    if email_input.strip() == "":
+    if not email_input.strip():
         st.warning("Please enter an email message to check!")
     else:
         cleaned_text = transformText(email_input)
         vectorized_text = tfv.transform([cleaned_text])
-        vectorized_text_dense = vectorized_text.toarray()
+
+        # Convert dense for GaussianNB
+        vectorized_dense = vectorized_text.toarray()
 
         predictions = [
-            gnb.predict(vectorized_text_dense)[0],
-            mnb.predict(vectorized_text_dense)[0],
-            bnb.predict(vectorized_text_dense)[0],
-            tfvgnb.predict(vectorized_text_dense)[0],
-            tfvmnb.predict(vectorized_text_dense)[0],
-            tfvbnb.predict(vectorized_text_dense)[0]
+            gnb.predict(vectorized_dense)[0],
+            mnb.predict(vectorized_dense)[0],
+            bnb.predict(vectorized_dense)[0],
+            tfvgnb.predict(vectorized_text)[0],
+            tfvmnb.predict(vectorized_text)[0],
+            tfvbnb.predict(vectorized_text)[0]
         ]
 
         final_prediction = Counter(predictions).most_common(1)[0][0]
